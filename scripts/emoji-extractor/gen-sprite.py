@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser(prog='gen-sprite', description="""Generate spri
 parser.add_argument('-e', '--emojis', help='folder where emojis are stored', default='output/', required=False)
 parser.add_argument('-i', '--xml', help='XML containing emojis map', default='emoji-categories.xml', required=False)
 parser.add_argument('-s', '--size', help='Maximum number of emojis per line', default='15', required=False)
+parser.add_argument('-r', '--resize', help='Maximum width for sprites', default='1530', required=False)
 args = parser.parse_args()
 
 xml = ElementTree.parse(args.xml).getroot()
@@ -43,6 +44,9 @@ for group in xml:
                 offset += 1
                 location = 0
             master.paste(image, (location, 128 * offset))
+        ratio = float(masterWidth) / float(args.resize)
+        newHeight = int(masterHeight / ratio)
+        master = master.resize((int(args.resize), newHeight))
         master.save(groupName + '.png', 'PNG')
     else:
         print 'Ignoring ' + groupName + '...'
