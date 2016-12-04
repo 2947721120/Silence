@@ -1,9 +1,11 @@
 #!/usr/bin/env python2
+from __future__ import unicode_literals
 
 import os
 from PIL import Image
 import argparse
 import xml.etree.ElementTree as ElementTree
+import io
 
 parser = argparse.ArgumentParser(prog='gen-sprite', description="""Generate sprites from extracted emojis.""")
 parser.add_argument('-e', '--emojis', help='folder where emojis are stored', default='output/', required=False)
@@ -17,11 +19,25 @@ xml = ElementTree.parse(args.xml).getroot()
 for group in xml:
     groupName = group.attrib['name']
     emojis = []
+    output = io.open(groupName + '.txt', 'w', encoding='utf8')
     for item in group:
         emoji = item.text.replace(',', '_u').lower()
         if '|' not in emoji and os.path.isfile(args.emojis + 'emoji_u' + emoji + '.png'):
             emojis.append(args.emojis + 'emoji_u' + emoji + '.png')
+            emojiCodePoint = '\\U' + emoji.replace('_u', '\\U')
+            emojiCodePoint = emojiCodePoint.split('\\U')
+            finalCodePoints = []
+            for point in emojiCodePoint:
+                point = point.replace('\\U', '')
+                if len(point) > 0:
+                    if len(point) < 8:
+                        point = "0" * (8 - len(point)) + point
+                    finalCodePoints.append(point)
+            char = '\\U' + '\\U'.join(finalCodePoints)
+            output.write(char.decode('unicode_escape') + '\n')
     images = [Image.open(filename) for filename in emojis]
+    output.close()
+
 
     if len(images) > 0:
         print "Generating sprite for " + groupName
